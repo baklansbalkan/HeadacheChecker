@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 
 public class HeadacheDTO {
 
+    private int id;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate date;
 
@@ -22,7 +24,7 @@ public class HeadacheDTO {
     @Size(max = 50, message = "Please, use no more than 50 characters")
     private String medicine;
 
-    @Min(value = 1,message = "Intensity should be from 1 to 5")
+    @Min(value = 1, message = "Intensity should be from 1 to 5")
     @Max(value = 5, message = "Intensity should be from 1 to 5")
     private int intensity;
 
@@ -39,6 +41,14 @@ public class HeadacheDTO {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public LocalDate getDate() {
         return date;

@@ -1,14 +1,11 @@
 package org.baklansbalkan.HeadacheChecker.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.baklansbalkan.HeadacheChecker.dto.HeadacheDTO;
-import org.baklansbalkan.HeadacheChecker.models.Headache;
 import org.baklansbalkan.HeadacheChecker.services.HeadacheService;
 import org.baklansbalkan.HeadacheChecker.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -21,69 +18,55 @@ import java.util.List;
 public class HeadacheController {
 
     private final HeadacheService headacheService;
-    private final ObjectMapper objectMapper;
     private final HeadacheValidator headacheValidator;
 
     @Autowired
-    public HeadacheController(HeadacheService headacheService, ObjectMapper objectMapper, HeadacheValidator headacheValidator) {
+    public HeadacheController(HeadacheService headacheService, HeadacheValidator headacheValidator) {
         this.headacheService = headacheService;
-        this.objectMapper = objectMapper;
         this.headacheValidator = headacheValidator;
     }
 
     @GetMapping
     public List<HeadacheDTO> getAllHeadache() {
-        return headacheService.findAllHeadache().stream()
-                .map(this::convertToHeadacheDTO)
-                .toList();
+        return headacheService.findAllHeadache();
     }
 
     @GetMapping("/{date}")
     public HeadacheDTO getHeadacheByDate(@PathVariable("date") LocalDate date) {
-        return convertToHeadacheDTO(headacheService.findHeadacheByDate(date));
+        return headacheService.findHeadacheByDate(date);
     }
 
     @PostMapping
-    public ResponseEntity<HttpStatus> createHeadache(@RequestBody @Valid HeadacheDTO headacheDTO, BindingResult bindingResult) {
+    public HeadacheDTO createHeadache(@RequestBody @Valid HeadacheDTO headacheDTO, BindingResult bindingResult) {
         headacheValidator.validate(headacheDTO, bindingResult);
         checkBindingResults(bindingResult);
-        headacheService.saveHeadache(convertToHeadache(headacheDTO));
-        return ResponseEntity.ok(HttpStatus.OK);
+        return headacheService.saveHeadache(headacheDTO);
     }
 
     @PutMapping("/{date}")
-    public ResponseEntity<HttpStatus> updateHeadache(@PathVariable("date") LocalDate date, @RequestBody @Valid
+    public HeadacheDTO updateHeadache(@PathVariable("date") LocalDate date, @RequestBody @Valid
     HeadacheDTO headacheDTO, BindingResult bindingResult) {
         checkBindingResults(bindingResult);
         int updatedHeadacheId = headacheService.findHeadacheByDate(date).getId();
-        headacheService.updateHeadache(updatedHeadacheId, convertToHeadache(headacheDTO));
-        return ResponseEntity.ok(HttpStatus.OK);
+        headacheService.updateHeadache(updatedHeadacheId, headacheDTO);
+        return headacheDTO;
     }
 
     @DeleteMapping("/{date}")
-    public ResponseEntity<HttpStatus> deleteHeadache(@PathVariable("date") LocalDate date) {
+    public void deleteHeadache(@PathVariable("date") LocalDate date) {
         headacheService.deleteHeadache(headacheService.findHeadacheByDate(date));
-        return ResponseEntity.ok(HttpStatus.OK);
     }
 
     @ExceptionHandler
-    private ResponseEntity<HeadacheErrorResponse> handleHeadacheNotFoundException(HeadacheNotFoundException e) {
-        HeadacheErrorResponse response = new HeadacheErrorResponse(e.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    @ResponseStatus(value = HttpStatus.NOT_FOUND)
+    private HeadacheErrorResponse handleHeadacheNotFoundException(HeadacheNotFoundException exception) {
+        return new HeadacheErrorResponse(exception.getMessage());
     }
 
     @ExceptionHandler
-    private ResponseEntity<HeadacheErrorResponse> handleHeadacheNotCreatedException(HeadacheNotCreatedException e) {
-        HeadacheErrorResponse response = new HeadacheErrorResponse(e.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-    private Headache convertToHeadache(HeadacheDTO headacheDTO) {
-        return objectMapper.convertValue(headacheDTO, Headache.class);
-    }
-
-    private HeadacheDTO convertToHeadacheDTO(Headache headache) {
-        return objectMapper.convertValue(headache, HeadacheDTO.class);
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
+    private HeadacheErrorResponse handleHeadacheNotCreatedException(HeadacheNotCreatedException exception) {
+        return new HeadacheErrorResponse(exception.getMessage());
     }
 
     private void checkBindingResults(BindingResult bindingResult) {

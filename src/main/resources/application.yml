@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: HeadacheChecker
+  datasource:
+    url: jdbc:postgresql://localhost:5432/headache_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        show_sql: 'true'
+        ddl-auto: create-drop
