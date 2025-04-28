@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: HeadacheChecker
+
+  datasource:
+    url: jdbc:tc:postgresql:latest:///test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show_sql: true
+

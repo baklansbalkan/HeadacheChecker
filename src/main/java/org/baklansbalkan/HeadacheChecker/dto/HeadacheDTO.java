@@ -24,8 +24,8 @@ public class HeadacheDTO {
     @Size(max = 50, message = "Please, use no more than 50 characters")
     private String medicine;
 
-    @Min(value = 1, message = "Intensity should be from 1 to 5")
-    @Max(value = 5, message = "Intensity should be from 1 to 5")
+    @Min(value = 0, message = "Intensity should be from 0 to 5")
+    @Max(value = 5, message = "Intensity should be from 0 to 5")
     private int intensity;
 
     @Enumerated(EnumType.STRING)
