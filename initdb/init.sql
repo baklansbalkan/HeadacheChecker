@@ -4,7 +4,7 @@ CREATE TABLE headache (
                           isheadache BOOLEAN,
                           ismedicine BOOLEAN,
                           medicine VARCHAR(50),
-                          intensity INT CHECK (intensity > 0 AND intensity <= 5),
+                          intensity INT CHECK (intensity >= 0 AND intensity < 6),
                           localisation VARCHAR(10),
                           timesofday VARCHAR(10),
                           comment VARCHAR(200),
