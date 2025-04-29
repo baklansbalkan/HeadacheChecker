@@ -1,6 +1,10 @@
 package org.baklansbalkan.HeadacheChecker.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
@@ -13,6 +17,7 @@ public class Headache {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private int id;
 
     @Column(name = "date")
@@ -26,9 +31,12 @@ public class Headache {
     private boolean isMedicine;
 
     @Column(name = "medicine")
+    @Size(max = 50, message = "Please, use no more than 50 characters")
     private String medicine;
 
     @Column(name = "intensity")
+    @Min(value = 0, message = "Intensity should be from 0 to 5")
+    @Max(value = 5, message = "Intensity should be from 0 to 5")
     private int intensity;
 
     @Column(name = "localisation")
@@ -40,9 +48,11 @@ public class Headache {
     private TimesOfDay timesOfDay;
 
     @Column(name = "comment")
+    @Size(max = 200, message = "Please, use no more than 200 characters")
     private String comment;
 
     @Column(name = "createdat")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
     public Headache(int id, LocalDate date, boolean isHeadache, boolean isMedicine, String medicine, int intensity, Localisation localisation, TimesOfDay timesOfDay, String comment) {

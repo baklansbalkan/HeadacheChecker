@@ -121,4 +121,19 @@ public class HeadacheDTO {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public String toString() {
+        return "HeadacheDTO{" +
+                "id=" + id +
+                ", date=" + date +
+                ", isHeadache=" + isHeadache +
+                ", isMedicine=" + isMedicine +
+                ", medicine='" + medicine + '\'' +
+                ", intensity=" + intensity +
+                ", localisation='" + localisation + '\'' +
+                ", timesOfDay='" + timesOfDay + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }
