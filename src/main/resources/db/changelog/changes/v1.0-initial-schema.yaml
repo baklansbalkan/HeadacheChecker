@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: baklansbalkan
+      changes:
+        - createTable:
+            tableName: headache
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: isheadache
+                  type: BOOLEAN
+              - column:
+                  name: ismedicine
+                  type: BOOLEAN
+              - column:
+                  name: medicine
+                  type: VARCHAR(50)
+              - column:
+                  name: intensity
+                  type: INT
+                  constraints:
+                    checkConstraint: "intensity >= 0 AND intensity < 6"
+              - column:
+                  name: localisation
+                  type: VARCHAR(10)
+              - column:
+                  name: timesofday
+                  type: VARCHAR(10)
+              - column:
+                  name: comment
+                  type: VARCHAR(200)
+              - column:
+                  name: createdat
+                  type: TIMESTAMP
