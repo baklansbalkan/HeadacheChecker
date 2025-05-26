@@ -5,16 +5,18 @@ import org.baklansbalkan.HeadacheChecker.models.Headache;
 import org.baklansbalkan.HeadacheChecker.models.Localisation;
 import org.baklansbalkan.HeadacheChecker.models.TimesOfDay;
 import org.baklansbalkan.HeadacheChecker.repositories.HeadacheRepository;
-import org.baklansbalkan.HeadacheChecker.util.HeadacheMapper;
-import org.baklansbalkan.HeadacheChecker.util.HeadacheNotCreatedException;
-import org.baklansbalkan.HeadacheChecker.util.HeadacheNotFoundException;
-import org.junit.jupiter.api.Assertions;
+import org.baklansbalkan.HeadacheChecker.util.EntryNotCreatedException;
+import org.baklansbalkan.HeadacheChecker.util.EntryNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.TransactionSystemException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,7 +29,7 @@ class HeadacheServiceTest {
     @Autowired
     private HeadacheService headacheService;
     @Autowired
-    HeadacheMapper headacheMapper;
+    private ModelMapper modelMapper;
 
     @BeforeEach
     public void setUp() {
@@ -36,54 +38,42 @@ class HeadacheServiceTest {
 
     @Test
     @DisplayName("Test: Getting all the entries")
-    void testFindAllHeadache() {
+    void testFindAllHeadacheByUserId() {
         Headache headache01 = setHeadache(LocalDate.parse("2025-01-01"));
-        headacheRepository.save(headache01);
-        int id01 = headache01.getId();
         Headache headache02 = setHeadache(LocalDate.parse("2025-01-02"));
-        headacheRepository.save(headache02);
-        int id02 = headache02.getId();
+        headacheRepository.saveAll(List.of(headache01, headache02));
 
-        List<HeadacheDTO> allHeadache = headacheService.findAllHeadache();
+        List<HeadacheDTO> user1Headaches = headacheService.findAllHeadacheByUserId(1);
 
-        List<HeadacheDTO> controlHeadache = List.of(
-                headacheMapper.convertToHeadacheDTO(new Headache(id01, LocalDate.parse("2025-01-01"), true, true, "Medicine example", 4, Localisation.RIGHT, TimesOfDay.MORNING, "Comment")),
-                headacheMapper.convertToHeadacheDTO(new Headache(id02, LocalDate.parse("2025-01-02"), true, true, "Medicine example", 4, Localisation.RIGHT, TimesOfDay.MORNING, "Comment"))
-        );
-
-        Assertions.assertNotNull(allHeadache);
-        Assertions.assertEquals(controlHeadache.toString(), allHeadache.toString());
+        assertThat(user1Headaches)
+                .hasSize(2)
+                .usingRecursiveFieldByFieldElementComparator()
+                .containsExactlyInAnyOrder(
+                        modelMapper.map(headache01, HeadacheDTO.class),
+                        modelMapper.map(headache02, HeadacheDTO.class)
+                );
     }
 
     @Test
     @DisplayName("Test: Getting an entry by date")
     void findHeadacheByDate() {
         Headache headache = setHeadache(LocalDate.parse("2025-01-01"));
-        headache.setDate(LocalDate.parse("2025-01-01"));
         headacheRepository.save(headache);
         LocalDate date = headache.getDate();
-        int id = headache.getId();
 
-        HeadacheDTO headacheByDate = headacheService.findHeadacheByDate(date);
+        HeadacheDTO headacheByDate = headacheService.findHeadacheByDateAndUserId(date, 1);
 
-        Assertions.assertNotNull(headacheByDate);
-        Assertions.assertEquals(id, headacheByDate.getId());
-        Assertions.assertTrue(headacheByDate.isIsHeadache());
-        Assertions.assertTrue(headacheByDate.isIsMedicine());
-        Assertions.assertEquals("Medicine example", headacheByDate.getMedicine());
-        Assertions.assertEquals(4, headacheByDate.getIntensity());
-        Assertions.assertEquals("RIGHT", headacheByDate.getLocalisation());
-        Assertions.assertEquals("MORNING", headacheByDate.getTimesOfDay());
-        Assertions.assertEquals("Comment", headacheByDate.getComment());
+        assertThat(headacheByDate)
+                .usingRecursiveComparison()
+                .isEqualTo(modelMapper.map(headache, HeadacheDTO.class));
     }
 
     @Test
     @DisplayName("Test: Getting an exception when searching an entry by date")
     void testFindHeadacheByDateException() {
-        Assertions.assertThrows(
-                HeadacheNotFoundException.class,
-                () -> headacheService.findHeadacheByDate(LocalDate.parse("1900-01-01"))
-        );
+        assertThatThrownBy(() -> headacheService.findHeadacheByDateAndUserId(LocalDate.parse("1900-01-01"), 1))
+                .isInstanceOf(EntryNotFoundException.class)
+                .hasMessageContaining("Sorry, this entry doesn't exist");
     }
 
     @Test
@@ -91,13 +81,15 @@ class HeadacheServiceTest {
     void testSaveHeadache() {
         Headache headache = setHeadache(LocalDate.parse("2025-01-01"));
         headacheRepository.save(headache);
-        int id = headache.getId();
 
-        Assertions.assertNotNull(headache);
-        Assertions.assertEquals(
-                new Headache(id, LocalDate.parse("2025-01-01"), true, true, "Medicine example", 4, Localisation.RIGHT, TimesOfDay.MORNING, "Comment").toString(),
-                headache.toString()
-        );
+        assertThat(headache)
+                .usingRecursiveComparison()
+                .isEqualTo(new Headache(
+                        headache.getId(),
+                        LocalDate.parse("2025-01-01"),
+                        true, true, "Medicine example", 4,
+                        Localisation.RIGHT, TimesOfDay.MORNING, "Comment", 1
+                ));
     }
 
     @Test
@@ -106,10 +98,8 @@ class HeadacheServiceTest {
         Headache headache = setHeadache(LocalDate.parse("2025-01-01"));
         headache.setMedicine("Medicine example with toooooooooooooo long description");
 
-        Assertions.assertThrows(
-                HeadacheNotCreatedException.class,
-                () -> headacheService.saveHeadache(headacheMapper.convertToHeadacheDTO(headache))
-        );
+        assertThatThrownBy(() -> headacheService.saveHeadache(modelMapper.map(headache, HeadacheDTO.class)))
+                .isInstanceOf(EntryNotCreatedException.class);
     }
 
     @Test
@@ -117,18 +107,17 @@ class HeadacheServiceTest {
     void testUpdateHeadache() {
         Headache headache = setHeadache(LocalDate.parse("2025-01-01"));
         headacheRepository.save(headache);
-        int id = headache.getId();
 
         headache.setComment("This entry has been updated");
         headache.setIntensity(5);
 
-        headacheService.updateHeadache(id, headacheMapper.convertToHeadacheDTO(headache));
+        headacheService.updateHeadache(headache.getId(), modelMapper.map(headache, HeadacheDTO.class));
+        Headache updatedHeadache = headacheRepository.findById(headache.getId()).orElseThrow();
 
-        Assertions.assertNotNull(headache);
-        Assertions.assertEquals(
-                new Headache(id, LocalDate.parse("2025-01-01"), true, true, "Medicine example", 5, Localisation.RIGHT, TimesOfDay.MORNING, "This entry has been updated").toString(),
-                headache.toString()
-        );
+        assertThat(updatedHeadache)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(headache);
     }
 
     @Test
@@ -136,14 +125,13 @@ class HeadacheServiceTest {
     void testUpdateHeadacheException() {
         Headache headache = setHeadache(LocalDate.parse("2025-01-01"));
         headacheRepository.save(headache);
-        int id = headache.getId();
 
         headache.setMedicine("Medicine example with toooooooooooooo long description");
 
-        Assertions.assertThrows(
-                TransactionSystemException.class,
-                () -> headacheService.updateHeadache(id, headacheMapper.convertToHeadacheDTO(headache))
-        );
+        assertThatThrownBy(() -> headacheService.updateHeadache(
+                headache.getId(),
+                modelMapper.map(headache, HeadacheDTO.class)
+        )).isInstanceOf(TransactionSystemException.class);
     }
 
     @Test
@@ -152,16 +140,16 @@ class HeadacheServiceTest {
         Headache headache = setHeadache(LocalDate.parse("2025-01-01"));
         headacheRepository.save(headache);
 
-        headacheService.deleteHeadache(headacheMapper.convertToHeadacheDTO(headache));
+        headacheService.deleteHeadache(modelMapper.map(headache, HeadacheDTO.class));
+
+        assertThat(headacheRepository.findById(headache.getId())).isEmpty();
     }
 
     @Test
     @DisplayName("Test: Getting an exception when deleting an entry")
     void testDeleteHeadacheException() {
-        Assertions.assertThrows(
-                HeadacheNotFoundException.class,
-                () -> headacheService.deleteHeadache(new HeadacheDTO())
-        );
+        assertThatThrownBy(() -> headacheService.deleteHeadache(new HeadacheDTO()))
+                .isInstanceOf(RuntimeException.class);
     }
 
     private Headache setHeadache(LocalDate date) {
@@ -174,6 +162,7 @@ class HeadacheServiceTest {
         headache.setLocalisation(Localisation.RIGHT);
         headache.setTimesOfDay(TimesOfDay.MORNING);
         headache.setComment("Comment");
+        headache.setUserId(1);
         return headache;
     }
 }

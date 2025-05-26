@@ -1,0 +1,79 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+    <changeSet id="2" author="baklansbalkan">
+
+    <createTable tableName="role">
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true" nullable="false"/>
+        </column>
+        <column name="name" type="VARCHAR(50)">
+            <constraints nullable="false" unique="true"/>
+        </column>
+    </createTable>
+
+    <createTable tableName="user_table">
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true" nullable="false"/>
+        </column>
+        <column name="username" type="VARCHAR(30)">
+            <constraints nullable="false" unique="true"/>
+        </column>
+        <column name="email" type="VARCHAR(30)">
+            <constraints nullable="false" unique="true"/>
+        </column>
+        <column name="password" type="VARCHAR(100)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+            <constraints nullable="false"/>
+        </column>
+        <column name="enabled" type="BOOLEAN" defaultValue="true">
+            <constraints nullable="false"/>
+        </column>
+    </createTable>
+
+    <createTable tableName="user_role">
+        <column name="user_id" type="INT">
+            <constraints nullable="false"/>
+        </column>
+        <column name="role_id" type="INT">
+            <constraints nullable="false"/>
+        </column>
+    </createTable>
+
+    <addPrimaryKey tableName="user_role" columnNames="user_id, role_id"/>
+
+    <addForeignKeyConstraint baseTableName="user_role"
+                             baseColumnNames="user_id"
+                             constraintName="fk_user_role_user"
+                             referencedTableName="user_table"
+                             referencedColumnNames="id"
+                             onDelete="CASCADE"/>
+
+    <addForeignKeyConstraint baseTableName="user_role"
+                             baseColumnNames="role_id"
+                             constraintName="fk_user_role_role"
+                             referencedTableName="role"
+                             referencedColumnNames="id"
+                             onDelete="CASCADE"/>
+
+    <insert tableName="role">
+        <column name="name" value="ROLE_USER"/>
+    </insert>
+    <insert tableName="role">
+        <column name="name" value="ROLE_ADMIN"/>
+    </insert>
+
+    <createIndex tableName="user_table" indexName="idx_user_username">
+        <column name="username"/>
+    </createIndex>
+
+    <createIndex tableName="user_table" indexName="idx_user_email">
+        <column name="email"/>
+    </createIndex>
+</changeSet>
+</databaseChangeLog>

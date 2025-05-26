@@ -6,12 +6,12 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
-
+import java.util.Optional;
 
 @Repository
 public interface HeadacheRepository extends JpaRepository<Headache, Integer> {
-
-    Headache findByDate(LocalDate date);
-
-    List<Headache> findAllByDateBetween(LocalDate firstDate, LocalDate lastDate);
+    List<Headache> findByUserId(Integer userId);
+    Optional<Headache> findByDateAndUserId(LocalDate date, Integer userId);
+    List<Headache> findAllByUserId(Integer id);
+    List<Headache> findAllByDateBetweenAndUserId(LocalDate firstDate, LocalDate lastDate, Integer userId);
 }

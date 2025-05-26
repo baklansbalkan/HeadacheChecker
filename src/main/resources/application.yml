@@ -16,5 +16,25 @@ spring:
     password: postgres
     enabled: 'true'
     user: postgres
-    change-log: classpath:db/changelog/db.changelog-master.yaml
+    change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: public
+    drop-first: true
+security:
+  token: jartjhati984j7hde1n0lkhdeqoubfdrt42gimp0gfayt538kgnlojhs5jo0unga
+  expiration: 86400000
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+        web: DEBUG
+      baklansbalkan:
+        HeadacheChecker:
+          security: DEBUG
+          config: DEBUG
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE

@@ -12,3 +12,9 @@ spring:
       ddl-auto: update
     show_sql: true
 
+  liquibase:
+    enabled: false
+
+security:
+  token: jartjhati984j7hde1n0lkhdeqoubfdrt42gimp0gfayt538kgnlojhs5jo0unga
+  expiration: 86400000

@@ -2,7 +2,7 @@ package org.baklansbalkan.HeadacheChecker.services;
 
 import org.baklansbalkan.HeadacheChecker.dto.HeadacheDTO;
 import org.baklansbalkan.HeadacheChecker.repositories.HeadacheRepository;
-import org.baklansbalkan.HeadacheChecker.util.HeadacheMapper;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,24 +15,31 @@ import java.util.List;
 public class StatisticsService {
 
     private final HeadacheRepository headacheRepository;
-    private final HeadacheMapper headacheMapper;
+    private final ModelMapper modelMapper;
 
-    public StatisticsService(HeadacheRepository headacheRepository, HeadacheMapper headacheMapper) {
+
+    public StatisticsService(HeadacheRepository headacheRepository, ModelMapper modelMapper) {
         this.headacheRepository = headacheRepository;
-        this.headacheMapper = headacheMapper;
+        this.modelMapper = modelMapper;
     }
 
-    public List<HeadacheDTO> showMonthStatistics(LocalDate date) {
-        return headacheRepository.findAllByDateBetween(date.with(TemporalAdjusters.firstDayOfMonth()),
-                        date.with(TemporalAdjusters.lastDayOfMonth())).stream()
-                .map(headacheMapper::convertToHeadacheDTO)
+    public List<HeadacheDTO> showMonthStatistics(LocalDate date, Integer userId) {
+        return headacheRepository.findAllByDateBetweenAndUserId(
+                        date.with(TemporalAdjusters.firstDayOfMonth()),
+                        date.with(TemporalAdjusters.lastDayOfMonth()),
+                        userId)
+                .stream()
+                .map(headache -> modelMapper.map(headache, HeadacheDTO.class))
                 .toList();
     }
 
-    public List<HeadacheDTO> showYearStatistics(LocalDate date) {
-        return headacheRepository.findAllByDateBetween(date.with(TemporalAdjusters.firstDayOfYear()),
-                        date.with(TemporalAdjusters.lastDayOfYear())).stream()
-                .map(headacheMapper::convertToHeadacheDTO)
+    public List<HeadacheDTO> showYearStatistics(LocalDate date, Integer userId) {
+        return headacheRepository.findAllByDateBetweenAndUserId(
+                        date.with(TemporalAdjusters.firstDayOfYear()),
+                        date.with(TemporalAdjusters.lastDayOfYear()),
+                        userId)
+                .stream()
+                .map(headache -> modelMapper.map(headache, HeadacheDTO.class))
                 .toList();
     }
 }

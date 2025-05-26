@@ -2,23 +2,27 @@ package org.baklansbalkan.HeadacheChecker.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.baklansbalkan.HeadacheChecker.dto.HeadacheDTO;
-import org.baklansbalkan.HeadacheChecker.models.Headache;
-import org.baklansbalkan.HeadacheChecker.models.Localisation;
-import org.baklansbalkan.HeadacheChecker.models.TimesOfDay;
+import org.baklansbalkan.HeadacheChecker.models.*;
 import org.baklansbalkan.HeadacheChecker.repositories.HeadacheRepository;
-import org.baklansbalkan.HeadacheChecker.util.HeadacheMapper;
+import org.baklansbalkan.HeadacheChecker.repositories.RoleRepository;
+import org.baklansbalkan.HeadacheChecker.repositories.UserRepository;
+import org.baklansbalkan.HeadacheChecker.util.EntryNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.is;
@@ -32,20 +36,33 @@ class HeadacheControllerTest {
     @Autowired
     private HeadacheRepository headacheRepository;
     @Autowired
-    private HeadacheMapper headacheMapper;
+    private ModelMapper modelMapper;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private RoleRepository roleRepository;
+    private String token;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         headacheRepository.deleteAll();
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
+        createTestRoles();
+        createTestUser();
         saveTestEntities();
+        token = obtainAccessToken("testusername", "testpassword");
     }
 
     @Test
     @DisplayName("Test: Getting all the entries")
     void testGetAllHeadache() throws Exception {
-        mockMvc.perform(get("/headache"))
+        mockMvc.perform(get("/headache")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
@@ -53,10 +70,15 @@ class HeadacheControllerTest {
     @Test
     @DisplayName("Test: Getting one entry by date")
     void testGetHeadacheByDate() throws Exception {
+        User testUser = userRepository.findByUsername("testusername")
+                .orElseThrow(() -> new EntryNotFoundException("Test user not found"));
+        List<Headache> headaches = headacheRepository.findAllByUserId(testUser.getId());
+        assertFalse(headaches.isEmpty(), "No headaches found for test user");
         Headache headache = headacheRepository.findAll().get(0);
         LocalDate date = headache.getDate();
 
-        mockMvc.perform(get("/headache/{date}", date))
+        mockMvc.perform(get("/headache/{date}", date)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.date", is(date.toString())));
@@ -65,7 +87,8 @@ class HeadacheControllerTest {
     @Test
     @DisplayName("Test: Getting an exception when searching by date")
     void testGetHeadacheByDateException() throws Exception {
-        mockMvc.perform(get("/headache/{date}", LocalDate.parse("1990-01-01")))
+        mockMvc.perform(get("/headache/{date}", LocalDate.parse("1990-01-01"))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
 
@@ -84,6 +107,7 @@ class HeadacheControllerTest {
         String headacheDTOJson = objectMapper.writeValueAsString(headacheDTO);
 
         mockMvc.perform(post("/headache")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(headacheDTOJson))
                 .andExpect(status().isOk())
@@ -113,6 +137,7 @@ class HeadacheControllerTest {
         String headacheDTOJson = objectMapper.writeValueAsString(headacheDTO);
 
         mockMvc.perform(post("/headache")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(headacheDTOJson))
                 .andExpect(status().isBadRequest());
@@ -121,13 +146,19 @@ class HeadacheControllerTest {
     @Test
     @DisplayName("Test: Updating an entry")
     void testUpdateHeadache() throws Exception {
+        User testUser = userRepository.findByUsername("testusername")
+                .orElseThrow(() -> new EntryNotFoundException("Test user not found"));
+        List<Headache> headaches = headacheRepository.findAllByUserId(testUser.getId());
+        assertFalse(headaches.isEmpty(), "No headaches found for test user");
         Headache headache = headacheRepository.findAll().get(0);
         LocalDate date = headache.getDate();
-        HeadacheDTO headacheDTO = headacheMapper.convertToHeadacheDTO(headache);
+
+        HeadacheDTO headacheDTO = modelMapper.map(headache, HeadacheDTO.class);
         headacheDTO.setComment("This entry has been updated");
         String headacheDTOJson = objectMapper.writeValueAsString(headacheDTO);
 
         mockMvc.perform(put("/headache/{date}", date)
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(headacheDTOJson))
                 .andExpect(status().isOk())
@@ -139,11 +170,12 @@ class HeadacheControllerTest {
     void testUpdateHeadacheException() throws Exception {
         Headache headache = headacheRepository.findAll().get(0);
         LocalDate date = headache.getDate();
-        HeadacheDTO headacheDTO = headacheMapper.convertToHeadacheDTO(headache);
+        HeadacheDTO headacheDTO = modelMapper.map(headache, HeadacheDTO.class);
         headacheDTO.setMedicine("This entry has been updated and this description is tooooo long");
         String headacheDTOJson = objectMapper.writeValueAsString(headacheDTO);
 
         mockMvc.perform(put("/headache/{date}", date)
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(headacheDTOJson))
                 .andExpect(status().isBadRequest());
@@ -152,21 +184,48 @@ class HeadacheControllerTest {
     @Test
     @DisplayName("Test: Deleting an entry")
     void testDeleteHeadache() throws Exception {
+        User testUser = userRepository.findByUsername("testusername")
+                .orElseThrow(() -> new EntryNotFoundException("Test user not found"));
+        List<Headache> headaches = headacheRepository.findAllByUserId(testUser.getId());
+        assertFalse(headaches.isEmpty(), "No headaches found for test user");
         Headache headache = headacheRepository.findAll().get(0);
         LocalDate date = headache.getDate();
 
-        mockMvc.perform(delete("/headache/{date}", date))
+        mockMvc.perform(delete("/headache/{date}", date)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Test: Getting an exception when deleting an entry")
     void testDeleteTaskException() throws Exception {
-        mockMvc.perform(delete("/headache/{date}", LocalDate.parse("1990-01-01")))
+        mockMvc.perform(delete("/headache/{date}", LocalDate.parse("1990-01-01"))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
 
-    private void saveTestEntities() {
+    private void createTestRoles() {
+        Role userRole = new Role();
+        userRole.setName(RoleEnum.ROLE_USER);
+        roleRepository.save(userRole);
+    }
+
+    private void createTestUser() {
+        User user = new User();
+        user.setUsername("testusername");
+        user.setEmail("testemail@email.com");
+        user.setPassword(passwordEncoder.encode("testpassword"));
+        Role userRole = roleRepository.findByName(RoleEnum.ROLE_USER)
+                .orElseThrow(() -> new EntryNotFoundException("Error: Role is not found."));
+        user.setRoles(Collections.singleton(userRole));
+        userRepository.save(user);
+    }
+
+    private void saveTestEntities() throws Exception {
+        User testUser = userRepository.findByUsername("testusername")
+                .orElseThrow(() -> new EntryNotFoundException("Test user not found"));
+        Integer userId = testUser.getId();
+
         Headache headache01 = new Headache();
         headache01.setDate(LocalDate.parse("2025-01-01"));
         headache01.setIsHeadache(true);
@@ -176,6 +235,7 @@ class HeadacheControllerTest {
         headache01.setLocalisation(Localisation.RIGHT);
         headache01.setTimesOfDay(TimesOfDay.MORNING);
         headache01.setComment("Comment");
+        headache01.setUserId(userId);
 
         Headache headache02 = new Headache();
         headache02.setDate(LocalDate.parse("2025-01-02"));
@@ -186,6 +246,7 @@ class HeadacheControllerTest {
         headache02.setLocalisation(Localisation.LEFT);
         headache02.setTimesOfDay(TimesOfDay.EVENING);
         headache02.setComment("Comment");
+        headache02.setUserId(userId);
 
         Headache headache03 = new Headache();
         headache03.setDate(LocalDate.parse("2025-01-03"));
@@ -196,11 +257,28 @@ class HeadacheControllerTest {
         headache03.setLocalisation(Localisation.ALL);
         headache03.setTimesOfDay(TimesOfDay.AFTERNOON);
         headache03.setComment("Comment");
+        headache03.setUserId(userId);
 
         Headache headache04 = new Headache();
         headache04.setDate(LocalDate.parse("2025-01-04"));
         headache04.setIsHeadache(false);
 
         headacheRepository.saveAll(Arrays.asList(headache01, headache02, headache03, headache04));
+    }
+
+    private String obtainAccessToken(String username, String password) throws Exception {
+        Map<String, String> loginRequest = new HashMap<>();
+        loginRequest.put("username", username);
+        loginRequest.put("password", password);
+
+        String loginRequestJson = objectMapper.writeValueAsString(loginRequest);
+
+        ResultActions result = mockMvc.perform(post("/auth/signin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginRequestJson))
+                .andExpect(status().isOk());
+
+        String response = result.andReturn().getResponse().getContentAsString();
+        return new ObjectMapper().readTree(response).get("token").asText();
     }
 }
