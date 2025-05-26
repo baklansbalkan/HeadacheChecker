@@ -17,7 +17,7 @@ public class Headache {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @Column(name = "date")
     @Temporal(TemporalType.DATE)
@@ -37,14 +37,12 @@ public class Headache {
     @Column(name = "intensity")
     @Min(value = 0, message = "Intensity should be from 0 to 5")
     @Max(value = 5, message = "Intensity should be from 0 to 5")
-    private int intensity;
+    private Integer intensity;
 
     @Column(name = "localisation")
-    @Enumerated(EnumType.STRING)
     private Localisation localisation;
 
     @Column(name = "timesofday")
-    @Enumerated(EnumType.STRING)
     private TimesOfDay timesOfDay;
 
     @Column(name = "comment")
@@ -55,7 +53,10 @@ public class Headache {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
-    public Headache(int id, LocalDate date, boolean isHeadache, boolean isMedicine, String medicine, int intensity, Localisation localisation, TimesOfDay timesOfDay, String comment) {
+    @Column(name = "userid")
+    private Integer userId;
+
+    public Headache(Integer id, LocalDate date, boolean isHeadache, boolean isMedicine, String medicine, Integer intensity, Localisation localisation, TimesOfDay timesOfDay, String comment, Integer userId) {
         this.id = id;
         this.date = date;
         this.isHeadache = isHeadache;
@@ -65,16 +66,17 @@ public class Headache {
         this.localisation = localisation;
         this.timesOfDay = timesOfDay;
         this.comment = comment;
+        this.userId = userId;
     }
 
     public Headache() {
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -110,11 +112,11 @@ public class Headache {
         this.medicine = medicine;
     }
 
-    public int getIntensity() {
+    public Integer getIntensity() {
         return intensity;
     }
 
-    public void setIntensity(int intensity) {
+    public void setIntensity(Integer intensity) {
         this.intensity = intensity;
     }
 
@@ -150,6 +152,14 @@ public class Headache {
         this.createdAt = createdAt;
     }
 
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -175,6 +185,8 @@ public class Headache {
                 ", localisation=" + localisation +
                 ", timesOfDay=" + timesOfDay +
                 ", comment='" + comment + '\'' +
+                ", createdAt=" + createdAt +
+                ", userId=" + userId +
                 '}';
     }
 }

@@ -15,11 +15,11 @@
         </column>
     </createTable>
 
-    <createTable tableName="user">
+    <createTable tableName="user_table">
         <column name="id" type="INT" autoIncrement="true">
             <constraints primaryKey="true" nullable="false"/>
         </column>
-        <column name="login" type="VARCHAR(30)">
+        <column name="username" type="VARCHAR(30)">
             <constraints nullable="false" unique="true"/>
         </column>
         <column name="email" type="VARCHAR(30)">
@@ -50,7 +50,7 @@
     <addForeignKeyConstraint baseTableName="user_role"
                              baseColumnNames="user_id"
                              constraintName="fk_user_role_user"
-                             referencedTableName="user"
+                             referencedTableName="user_table"
                              referencedColumnNames="id"
                              onDelete="CASCADE"/>
 
@@ -68,11 +68,11 @@
         <column name="name" value="ROLE_ADMIN"/>
     </insert>
 
-    <createIndex tableName="user" indexName="idx_user_login">
-        <column name="login"/>
+    <createIndex tableName="user_table" indexName="idx_user_username">
+        <column name="username"/>
     </createIndex>
 
-    <createIndex tableName="user" indexName="idx_user_email">
+    <createIndex tableName="user_table" indexName="idx_user_email">
         <column name="email"/>
     </createIndex>
 </changeSet>

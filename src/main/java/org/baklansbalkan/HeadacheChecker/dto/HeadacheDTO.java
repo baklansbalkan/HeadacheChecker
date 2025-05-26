@@ -1,7 +1,6 @@
 package org.baklansbalkan.HeadacheChecker.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.baklansbalkan.HeadacheChecker.models.Localisation;
 import org.baklansbalkan.HeadacheChecker.models.TimesOfDay;
@@ -12,13 +11,12 @@ import java.time.LocalDateTime;
 
 public class HeadacheDTO {
 
-    private int id;
+    private Integer id;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate date;
 
     private boolean isHeadache;
-
     private boolean isMedicine;
 
     @Size(max = 50, message = "Please, use no more than 50 characters")
@@ -26,13 +24,11 @@ public class HeadacheDTO {
 
     @Min(value = 0, message = "Intensity should be from 0 to 5")
     @Max(value = 5, message = "Intensity should be from 0 to 5")
-    private int intensity;
+    private Integer intensity;
 
-    @Enumerated(EnumType.STRING)
     @ValueOfEnum(enumClass = Localisation.class, message = "Please, use one of the options: LEFT, RIGHT, ALL")
     private String localisation;
 
-    @Enumerated(EnumType.STRING)
     @ValueOfEnum(enumClass = TimesOfDay.class, message = "Please, use one of the options: MORNING, AFTERNOON, EVENING, NIGHT")
     private String timesOfDay;
 
@@ -42,11 +38,13 @@ public class HeadacheDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
-    public int getId() {
+    private Integer userId;
+
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -82,11 +80,11 @@ public class HeadacheDTO {
         this.medicine = medicine;
     }
 
-    public int getIntensity() {
+    public Integer getIntensity() {
         return intensity;
     }
 
-    public void setIntensity(int intensity) {
+    public void setIntensity(Integer intensity) {
         this.intensity = intensity;
     }
 
@@ -122,6 +120,14 @@ public class HeadacheDTO {
         this.createdAt = createdAt;
     }
 
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
     @Override
     public String toString() {
         return "HeadacheDTO{" +
@@ -134,6 +140,8 @@ public class HeadacheDTO {
                 ", localisation='" + localisation + '\'' +
                 ", timesOfDay='" + timesOfDay + '\'' +
                 ", comment='" + comment + '\'' +
+                ", createdAt=" + createdAt +
+                ", userId=" + userId +
                 '}';
     }
 }

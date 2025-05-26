@@ -1,8 +1,10 @@
 package org.baklansbalkan.HeadacheChecker.util;
 
 import org.baklansbalkan.HeadacheChecker.dto.HeadacheDTO;
+import org.baklansbalkan.HeadacheChecker.security.UserDetailsImpl;
 import org.baklansbalkan.HeadacheChecker.services.HeadacheService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -25,12 +27,13 @@ public class HeadacheValidator implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         HeadacheDTO headache = (HeadacheDTO) target;
+        Integer currentUserId = ((UserDetailsImpl) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal()).getId();
         try {
-            headacheService.findHeadacheByDate(headache.getDate());
-        } catch (HeadacheNotFoundException ignored) {
-            return;
+            headacheService.findHeadacheByDateAndUserId(headache.getDate(), currentUserId);
+            errors.rejectValue("Date", "", "Entry for this date is already exist");
+        } catch (EntryNotFoundException ignored) {
         }
-        errors.rejectValue("Date", "", "Entry for this date is already exist");
     }
 }
 

@@ -23,6 +23,7 @@
             <column name="timesofday" type="VARCHAR(10)"/>
             <column name="comment" type="VARCHAR(200)"/>
             <column name="createdat" type="TIMESTAMP"/>
+            <column name="userid" type="INT"/>
         </createTable>
 
         <createIndex tableName="headache" indexName="idx_headache_date">

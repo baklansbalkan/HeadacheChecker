@@ -3,9 +3,9 @@ package org.baklansbalkan.HeadacheChecker.services;
 import org.baklansbalkan.HeadacheChecker.dto.HeadacheDTO;
 import org.baklansbalkan.HeadacheChecker.models.Headache;
 import org.baklansbalkan.HeadacheChecker.repositories.HeadacheRepository;
-import org.baklansbalkan.HeadacheChecker.util.HeadacheMapper;
-import org.baklansbalkan.HeadacheChecker.util.HeadacheNotCreatedException;
-import org.baklansbalkan.HeadacheChecker.util.HeadacheNotFoundException;
+import org.baklansbalkan.HeadacheChecker.util.EntryNotCreatedException;
+import org.baklansbalkan.HeadacheChecker.util.EntryNotFoundException;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,65 +13,65 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
 public class HeadacheService {
 
     private final HeadacheRepository headacheRepository;
-    private final HeadacheMapper headacheMapper;
+    private final ModelMapper modelMapper;
+
 
     @Autowired
-    public HeadacheService(HeadacheRepository headacheRepository, HeadacheMapper headacheMapper) {
+    public HeadacheService(HeadacheRepository headacheRepository, ModelMapper modelMapper) {
         this.headacheRepository = headacheRepository;
-        this.headacheMapper = headacheMapper;
+        this.modelMapper = modelMapper;
     }
 
-    public List<HeadacheDTO> findAllHeadache() {
+    public List<HeadacheDTO> findAllHeadacheByUserId(Integer userId) {
         return headacheRepository.findAll().stream()
-                .map(headacheMapper::convertToHeadacheDTO)
+                .map(headache -> modelMapper.map(headache, HeadacheDTO.class))
                 .toList();
     }
 
-    public HeadacheDTO findHeadacheByDate(LocalDate date) {
-        if (Optional.ofNullable(headacheRepository.findByDate(date)).isPresent()) {
-            return headacheMapper.convertToHeadacheDTO(headacheRepository.findByDate(date));
-        } else {
-            throw new HeadacheNotFoundException("Sorry, this entry doesn't exist");
-        }
+    public HeadacheDTO findHeadacheByDateAndUserId(LocalDate date, Integer userId) {
+        Headache headache = headacheRepository.findByDateAndUserId(date, userId)
+                .orElseThrow(() -> new EntryNotFoundException("Sorry, this entry doesn't exist"));
+        return modelMapper.map(headache, HeadacheDTO.class);
     }
 
     @Transactional
     public HeadacheDTO saveHeadache(HeadacheDTO headacheDTO) {
         try {
-            Headache headache = headacheMapper.convertToHeadache(headacheDTO);
+            Headache headache = modelMapper.map(headacheDTO, Headache.class);
             enrichHeadache(headache);
             headacheRepository.save(headache);
-            return headacheMapper.convertToHeadacheDTO(headache);
+            return modelMapper.map(headache, HeadacheDTO.class);
         } catch (RuntimeException exception) {
-            throw new HeadacheNotCreatedException("Sorry, this entry hasn't been saved");
+            throw new EntryNotCreatedException("Sorry, this entry hasn't been saved");
         }
     }
 
     @Transactional
     public HeadacheDTO updateHeadache(int id, HeadacheDTO updatedHeadacheDTO) {
+        headacheRepository.findById(id).orElseThrow(
+                () -> new EntryNotFoundException("Sorry, this entry doesn't exist"));
         try {
-            Headache updatedHeadache = headacheMapper.convertToHeadache(updatedHeadacheDTO);
+            Headache updatedHeadache = modelMapper.map(updatedHeadacheDTO, Headache.class);
             enrichHeadache(updatedHeadache);
             updatedHeadache.setId(id);
             headacheRepository.save(updatedHeadache);
-            return headacheMapper.convertToHeadacheDTO(updatedHeadache);
+            return modelMapper.map(updatedHeadache, HeadacheDTO.class);
         } catch (RuntimeException exception) {
-            throw new HeadacheNotCreatedException("Sorry, this entry hasn't been updated");
+            throw new EntryNotCreatedException("Sorry, this entry hasn't been updated");
         }
     }
 
     @Transactional
     public void deleteHeadache(HeadacheDTO headacheDTO) {
-        headacheRepository.findById(headacheDTO.getId()).orElseThrow(
-                () -> new HeadacheNotFoundException("Sorry, this entry doesn't exist"));
-        headacheRepository.delete(headacheMapper.convertToHeadache(headacheDTO));
+        headacheRepository.findById(headacheDTO.getId())
+                .orElseThrow(() -> new EntryNotFoundException("Sorry, this entry doesn't exist"));
+        headacheRepository.delete(modelMapper.map(headacheDTO, Headache.class));
     }
 
     private void enrichHeadache(Headache headache) {
