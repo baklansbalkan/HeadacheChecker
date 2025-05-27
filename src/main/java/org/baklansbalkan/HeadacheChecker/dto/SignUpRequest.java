@@ -1,12 +1,18 @@
 package org.baklansbalkan.HeadacheChecker.dto;
 
-import jakarta.persistence.Column;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.util.Set;
 
+@Schema(description = "Sign up request", example = """
+        {
+          "username": "testuser",
+          "email": "test@example.com",
+          "password": "testpassword"
+        }""")
 public class SignUpRequest {
     @NotBlank
     @Size(max = 30)
@@ -19,7 +25,6 @@ public class SignUpRequest {
 
     @NotBlank
     @Size(max = 100)
-    @Column(name = "password")
     private String password;
 
     private Set<String> roles;

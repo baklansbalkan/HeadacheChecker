@@ -29,7 +29,7 @@ public class HeadacheService {
     }
 
     public List<HeadacheDTO> findAllHeadacheByUserId(Integer userId) {
-        return headacheRepository.findAll().stream()
+        return headacheRepository.findByUserId(userId).stream()
                 .map(headache -> modelMapper.map(headache, HeadacheDTO.class))
                 .toList();
     }
