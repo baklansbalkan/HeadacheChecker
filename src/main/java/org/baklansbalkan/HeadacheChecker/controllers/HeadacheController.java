@@ -1,5 +1,7 @@
 package org.baklansbalkan.HeadacheChecker.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.baklansbalkan.HeadacheChecker.dto.HeadacheDTO;
 import org.baklansbalkan.HeadacheChecker.security.UserDetailsImpl;
@@ -30,16 +32,22 @@ public class HeadacheController {
         this.headacheValidator = headacheValidator;
     }
 
+    @Operation(summary = "Get information about headaches", description = "Returns the current user's data")
+    @ApiResponse(responseCode = "200", description = "Success")
     @GetMapping
     public List<HeadacheDTO> getAllHeadacheForCurrentUser() {
         return headacheService.findAllHeadacheByUserId(getCurrentUserId());
     }
 
+    @Operation(summary = "Get information about headaches using date", description = "Returns the current user's data by date")
+    @ApiResponse(responseCode = "200", description = "Success")
     @GetMapping("/{date}")
     public HeadacheDTO getHeadacheByDate(@PathVariable("date") LocalDate date) {
         return headacheService.findHeadacheByDateAndUserId(date, getCurrentUserId());
     }
 
+    @Operation(summary = "Create new headache entry")
+    @ApiResponse(responseCode = "200", description = "Success")
     @PostMapping
     public HeadacheDTO createHeadache(@RequestBody @Valid HeadacheDTO headacheDTO, BindingResult bindingResult) {
         headacheDTO.setUserId(getCurrentUserId());
@@ -48,6 +56,8 @@ public class HeadacheController {
         return headacheService.saveHeadache(headacheDTO);
     }
 
+    @Operation(summary = "Edit the existing headache entry")
+    @ApiResponse(responseCode = "200", description = "Success")
     @PutMapping("/{date}")
     public HeadacheDTO updateHeadache(@PathVariable("date") LocalDate date, @RequestBody @Valid
     HeadacheDTO headacheDTO, BindingResult bindingResult) {
@@ -58,6 +68,8 @@ public class HeadacheController {
         return headacheService.updateHeadache(existingHeadache.getId(), headacheDTO);
     }
 
+    @Operation(summary = "Delete an entry")
+    @ApiResponse(responseCode = "200", description = "Success")
     @DeleteMapping("/{date}")
     public void deleteHeadache(@PathVariable("date") LocalDate date) {
         headacheService.deleteHeadache(headacheService.findHeadacheByDateAndUserId(date, getCurrentUserId()));

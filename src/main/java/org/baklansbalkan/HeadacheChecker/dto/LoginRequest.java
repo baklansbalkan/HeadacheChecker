@@ -1,5 +1,12 @@
 package org.baklansbalkan.HeadacheChecker.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Login request", example = """
+        {
+          "username": "testuser",
+          "password": "testpassword"
+        }""")
 public class LoginRequest {
     private String username;
     private String password;

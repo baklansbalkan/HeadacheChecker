@@ -1,6 +1,7 @@
 package org.baklansbalkan.HeadacheChecker.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import org.baklansbalkan.HeadacheChecker.models.Localisation;
 import org.baklansbalkan.HeadacheChecker.models.TimesOfDay;
@@ -9,6 +10,17 @@ import org.baklansbalkan.HeadacheChecker.util.ValueOfEnum;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Schema(description = "Headache entry", example = """
+        {
+             "date": "2025-01-01",
+             "isHeadache": true,
+             "isMedicine": true,
+             "medicine": "Medicine example",
+             "intensity": 3,
+             "localisation": "RIGHT",
+             "timesOfDay": "EVENING",
+             "comment": "Comment"
+         }""")
 public class HeadacheDTO {
 
     private Integer id;

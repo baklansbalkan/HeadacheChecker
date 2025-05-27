@@ -29,6 +29,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
+
+//            String path = request.getRequestURI();
+//            if (path.contains("swagger") || path.contains("api-docs") || path.contains("webjars")) {
+//                filterChain.doFilter(request, response);
+//                return;
+//            }
+
+
             String jwt = parseJwt(request);
             if ((jwt != null) && jwtUtils.validateJwtToken(jwt)) {
 
