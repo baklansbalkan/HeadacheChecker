@@ -26,4 +26,4 @@ Just run the app and go to <http://localhost:8080/swagger-ui/index.html>
 
 Firstly, you need to create a new user. Feel free to use auth-controller in order to sign up and sign in\
 Then you can create headache entries using headache-controller and check your statistics using statistics-controller\
-Also, you can create a plethora of users and manage them using admin role and admin-controller\
+Also, you can add a plethora of users and manage them using admin role and admin-controller
