@@ -53,7 +53,7 @@ public class Headache {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
-    @Column(name = "userid")
+    @Column(name = "userid", nullable = false)
     private Integer userId;
 
     public Headache(Integer id, LocalDate date, boolean isHeadache, boolean isMedicine, String medicine, Integer intensity, Localisation localisation, TimesOfDay timesOfDay, String comment, Integer userId) {
