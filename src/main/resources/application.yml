@@ -32,6 +32,9 @@ logging:
         HeadacheChecker:
           security: DEBUG
           config: DEBUG
+          services: DEBUG
+          controllers: DEBUG
+          aspect: DEBUG
       hibernate:
         SQL: DEBUG
         type:
