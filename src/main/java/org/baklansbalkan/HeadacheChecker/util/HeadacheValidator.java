@@ -30,10 +30,11 @@ public class HeadacheValidator implements Validator {
         Integer currentUserId = ((UserDetailsImpl) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal()).getId();
         try {
-            headacheService.findHeadacheByDateAndUserId(headache.getDate(), currentUserId);
-            errors.rejectValue("Date", "", "Entry for this date is already exist");
+            HeadacheDTO existingHeadache = headacheService.findHeadacheByDateAndUserId(headache.getDate(), currentUserId);
+            if (headache.getId() == null || !headache.getId().equals(existingHeadache.getId())) {
+                errors.rejectValue("Date", "", "Entry for this date is already exist");
+            }
         } catch (EntryNotFoundException ignored) {
         }
     }
 }
-

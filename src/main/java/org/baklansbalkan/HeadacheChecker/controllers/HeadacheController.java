@@ -69,10 +69,11 @@ public class HeadacheController {
                                       @Parameter(hidden = true) @CurrentUserId Integer userId,
                                       @RequestBody @Valid HeadacheDTO headacheDTO,
                                       BindingResult bindingResult) {
-        checkBindingResults(bindingResult);
         HeadacheDTO existingHeadache = headacheService.findHeadacheByDateAndUserId(date, userId);
         headacheDTO.setId(existingHeadache.getId());
         headacheDTO.setUserId(userId);
+        headacheValidator.validate(headacheDTO, bindingResult);
+        checkBindingResults(bindingResult);
         return headacheService.updateHeadache(existingHeadache.getId(), headacheDTO);
     }
 
